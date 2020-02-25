@@ -12,7 +12,7 @@ In this example, we will draw an Oracle Cloud Infrastructure API Gateway Referen
 
 
 
-![api_gateway_reference_architecture](https://github.com/stretchcloud/OCI-APIGW-Demo-API/blob/master/API-GW-Arch.png)
+![api_gateway_reference_architecture](https://github.com/stretchcloud/OCI-Diagram/blob/master/api_gateway_reference_architecture.png)
 
 
 
