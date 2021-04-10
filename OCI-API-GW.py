@@ -1,46 +1,46 @@
-from diagrams.oci.compute import Container
-from diagrams.oci.devops import Apiservice
-from diagrams.oci.network import Firewall
-from diagrams.oci.network import Internetgateway
-from diagrams.oci.network import Loadbalance
-from diagrams.oci.edge import Dns
-from diagrams.oci.edge import Waf
+from diagrams import Diagram
 
-from diagrams.oci.connectivity import Customerdatacenter
-from diagrams.oci.connectivity import Fastconnect
-from diagrams.oci.connectivity import Vpn
-from diagrams.oci.network import Drg
 
+from diagrams.oci.connectivity import DNS
+from diagrams.oci.security import WAF
+from diagrams.oci.connectivity import CustomerDatacenter
+from diagrams.oci.connectivity import FastConnect
+from diagrams.oci.connectivity import VPN
 from diagrams.oci.monitoring import Alarm
-from diagrams.oci.monitoring import Event
-from diagrams.oci.monitoring import Logging
+from diagrams.oci.monitoring import Events
 from diagrams.oci.monitoring import Telemetry
+from diagrams.oci.governance import Logging
+from diagrams.oci.security import IDAccess
+from diagrams.oci.network import InternetGateway
+from diagrams.oci.network import LoadBalancer
+from diagrams.oci.network import Firewall
+from diagrams.oci.devops import APIService
+from diagrams.oci.network import Drg
+from diagrams.oci.compute import Container
 
-from diagrams.oci.security import IdAccess
 
 from diagrams import Cluster, Diagram
 
-
 with Diagram("API Gateway Reference Architecture", show=False):
 
-    dns = Dns("DNS")
-    waf = Waf("WAF")
-    dc = Customerdatacenter("Customer DC")
-    fc = Fastconnect("Fast Connect")
-    vpn = Vpn("VPN")
+    dns = DNS("DNS")
+    waf = WAF("WAF")
+    dc = CustomerDatacenter("Customer DC")
+    fc = FastConnect("Fast Connect")
+    vpn = VPN("VPN")
     
     
     with Cluster("Tenancy"):
         ten_grp = [Alarm("Alarm"), 
-                   Event("Event"), 
+                   Events("Event"), 
                    Logging("Logging"), 
                    Telemetry("Monitoring")]
         with Cluster("Compartment"):
-            id = IdAccess("IAM")
+            id = IDAccess("IAM")
             with Cluster("VCN"):
-                ig = Internetgateway("Internet Gateway")
-                lb = Loadbalance("Load Balancer")
-                api = Apiservice("API Gateway")
+                ig = InternetGateway("Internet Gateway")
+                lb = LoadBalancer("Load Balancer")
+                api = APIService("API Gateway")
                 fw = Firewall("Firewall")
                 drg = Drg("DRG")
 
@@ -59,7 +59,3 @@ with Diagram("API Gateway Reference Architecture", show=False):
     dc >> fc >> drg
     dc >> vpn >> drg
     drg >> fw >> api
-    
-    
-    
-
