@@ -1,0 +1,18 @@
+services:
+  vfs-monitor:
+    build: .
+    container_name: vfs-slot-monitor
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    environment:
+      - PYTHONUNBUFFERED=1
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Uncomment to use host network (may help with some proxy setups)
+    # network_mode: host

@@ -1,0 +1,106 @@
+# VFS Slot Monitor Configuration
+#
+# Copy this file to config.yaml and edit to your needs.
+# Center codes and visa category codes can be discovered using:
+#   python -m vfs_monitor --discover
+
+centers:
+  - country_code: "fra"
+    country_name: "France"
+    mission_code: "fra"
+    center_code: ""               # Discovered via --discover mode
+    visa_category_code: ""        # Discovered via --discover mode
+    centers: ["London"]
+    enabled: true
+
+  - country_code: "nld"
+    country_name: "Netherlands"
+    mission_code: "nld"
+    center_code: ""
+    visa_category_code: ""
+    centers: ["London", "Manchester", "Edinburgh"]
+    enabled: false
+
+  - country_code: "ita"
+    country_name: "Italy"
+    mission_code: "ita"
+    center_code: ""
+    visa_category_code: ""
+    centers: ["London"]
+    enabled: false
+
+  - country_code: "deu"
+    country_name: "Germany"
+    mission_code: "deu"
+    center_code: ""
+    visa_category_code: ""
+    centers: ["London"]
+    enabled: false
+
+  - country_code: "esp"
+    country_name: "Spain"
+    mission_code: "esp"
+    center_code: ""
+    visa_category_code: ""
+    centers: ["London"]
+    enabled: false
+
+  - country_code: "prt"
+    country_name: "Portugal"
+    mission_code: "prt"
+    center_code: ""
+    visa_category_code: ""
+    centers: ["London"]
+    enabled: false
+
+  - country_code: "grc"
+    country_name: "Greece"
+    mission_code: "grc"
+    center_code: ""
+    visa_category_code: ""
+    centers: ["London"]
+    enabled: false
+
+  - country_code: "che"
+    country_name: "Switzerland"
+    mission_code: "che"
+    center_code: ""
+    visa_category_code: ""
+    centers: ["London"]
+    enabled: false
+
+  - country_code: "aut"
+    country_name: "Austria"
+    mission_code: "aut"
+    center_code: ""
+    visa_category_code: ""
+    centers: ["London"]
+    enabled: false
+
+  - country_code: "dnk"
+    country_name: "Denmark"
+    mission_code: "dnk"
+    center_code: ""
+    visa_category_code: ""
+    centers: ["London"]
+    enabled: false
+
+polling:
+  slot_check_interval_seconds: 8    # How often to poll the API (5-15 recommended)
+  jwt_refresh_hours: 2              # Re-login via browser every N hours
+  error_backoff_base: 30            # Base seconds for exponential backoff
+  error_backoff_max: 600            # Max backoff (10 minutes)
+  notification_cooldown_seconds: 300 # Don't re-notify same slot within 5 min
+
+proxy:
+  enabled: false
+  urls: []                           # e.g., ["http://user:pass@proxy1:8080", "http://user:pass@proxy2:8080"]
+  rotation: "round_robin"            # or "random"
+
+captcha:
+  provider: "2captcha"               # or "anticaptcha"
+  enabled: false
+
+browser:
+  headless: true
+  user_data_dir: ""                  # Optional: persist browser profile
