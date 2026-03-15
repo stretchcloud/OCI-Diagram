@@ -1,69 +1,30 @@
-"""Tests for VFS API client response parsing."""
+"""Tests for TLScontact browser-based slot checking.
+
+Note: The actual browser-based slot checking (browser_login.py) requires
+a running Chrome browser and cannot be unit-tested easily. These tests
+cover the helper functions that can be tested in isolation.
+"""
 
 import datetime
 
-from vfs_monitor.checker.api_client import _parse_slots_response
-from vfs_monitor.config import CenterConfig
+from vfs_monitor.auth.browser_login import _extract_date_from_context
 
 
-def _center():
-    return CenterConfig(
-        country_code="nld",
-        country_name="Netherlands",
-        mission_code="nld",
-        center_code="NLUK",
-        visa_category_code="002",
-        centers=["London"],
-        enabled=True,
-    )
+def test_extract_date_from_month_name():
+    result = _extract_date_from_context("15", "March", "2026 Calendar")
+    assert result == "2026-03-15"
 
 
-def test_parse_list_of_date_strings():
-    data = ["2026-03-15", "2026-03-17", "2026-03-20"]
-    slots = _parse_slots_response(data, _center())
-    assert len(slots) == 3
-    assert slots[0].date == datetime.date(2026, 3, 15)
-    assert slots[0].country_code == "nld"
-    assert slots[0].center == "London"
+def test_extract_date_from_abbreviated_month():
+    result = _extract_date_from_context("7", "Jul slots", "2026")
+    assert result == "2026-07-07"
 
 
-def test_parse_list_of_objects():
-    data = [
-        {"date": "2026-03-15", "count": 3, "timeSlots": ["09:00", "10:30"]},
-        {"date": "2026-03-17", "count": 1},
-    ]
-    slots = _parse_slots_response(data, _center())
-    assert len(slots) == 2
-    assert slots[0].slot_count == 3
-    assert slots[0].time_slots == ["09:00", "10:30"]
-    assert slots[1].slot_count == 1
+def test_extract_date_no_month():
+    result = _extract_date_from_context("15", "some text", "no month here")
+    assert result is None
 
 
-def test_parse_wrapped_response():
-    data = {"data": [{"date": "2026-03-15"}, {"date": "2026-03-17"}]}
-    slots = _parse_slots_response(data, _center())
-    assert len(slots) == 2
-
-
-def test_parse_empty_list():
-    slots = _parse_slots_response([], _center())
-    assert len(slots) == 0
-
-
-def test_parse_empty_dict():
-    slots = _parse_slots_response({}, _center())
-    assert len(slots) == 0
-
-
-def test_parse_datetime_string():
-    data = [{"appointmentDate": "2026-03-15T09:00:00"}]
-    slots = _parse_slots_response(data, _center())
-    assert len(slots) == 1
-    assert slots[0].date == datetime.date(2026, 3, 15)
-
-
-def test_parse_invalid_date_skipped():
-    data = ["not-a-date", "2026-03-15"]
-    slots = _parse_slots_response(data, _center())
-    assert len(slots) == 1
-    assert slots[0].date == datetime.date(2026, 3, 15)
+def test_extract_date_invalid_day():
+    result = _extract_date_from_context("32", "February", "2026")
+    assert result is None

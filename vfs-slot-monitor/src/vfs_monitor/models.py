@@ -1,4 +1,4 @@
-"""Data models for VFS slot monitor."""
+"""Data models for TLScontact slot monitor."""
 
 from __future__ import annotations
 
@@ -8,15 +8,16 @@ from dataclasses import dataclass, field
 
 @dataclass
 class AppointmentSlot:
-    """A single available appointment slot discovered from the VFS API."""
+    """A single available appointment slot discovered from TLScontact."""
 
     country_code: str
     country_name: str
-    center: str
+    center: str  # City name (e.g., "London")
     date: datetime.date
     time_slots: list[str] = field(default_factory=list)
     slot_count: int | None = None
     booking_url: str = ""
+    is_prime: bool = False  # TLScontact "prime time" premium slots
     discovered_at: datetime.datetime = field(default_factory=datetime.datetime.utcnow)
 
     @property

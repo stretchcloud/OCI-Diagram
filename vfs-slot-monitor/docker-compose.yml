@@ -1,7 +1,7 @@
 services:
-  vfs-monitor:
+  tls-monitor:
     build: .
-    container_name: vfs-slot-monitor
+    container_name: tls-slot-monitor
     restart: unless-stopped
     env_file: .env
     volumes:
@@ -9,6 +9,8 @@ services:
       - ./config:/app/config
     environment:
       - PYTHONUNBUFFERED=1
+    # TLScontact browser automation needs more shared memory
+    shm_size: '2gb'
     logging:
       driver: json-file
       options:

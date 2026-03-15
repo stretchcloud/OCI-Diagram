@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import yaml
@@ -11,24 +10,37 @@ from pydantic_settings import BaseSettings
 
 
 class CenterConfig(BaseModel):
-    """Configuration for a single VFS visa center to monitor."""
+    """Configuration for a single TLScontact visa center to monitor.
 
-    country_code: str
-    country_name: str
-    mission_code: str = ""
-    center_code: str = ""
-    visa_category_code: str = ""
-    centers: list[str] = Field(default_factory=lambda: ["London"])
+    TLScontact URL pattern:
+      https://visas-{country_code}.tlscontact.com/visa/{from_country}/{issuer_id}/home
+    Example:
+      https://visas-fr.tlscontact.com/visa/gb/gbLON2fr/home
+      https://visas-de.tlscontact.com/visa/gb/gbEDI2de/home
+
+    The issuer_id encodes: {from_country}{city_code}2{destination_country}
+    """
+
+    country_code: str  # TLS country code in URL: "fr", "de", "nl", etc.
+    country_name: str  # Display name: "France", "Germany", etc.
+    from_country: str = "gb"  # Country you're applying FROM (default: UK)
+    issuer_id: str = ""  # Full issuer ID, e.g., "gbLON2fr" (discovered via --discover)
+    city: str = "London"  # City name for display
     enabled: bool = False
 
 
 class PollingConfig(BaseModel):
-    """Polling interval settings."""
+    """Polling interval settings.
 
-    slot_check_interval_seconds: int = 8
-    jwt_refresh_hours: float = 2.0
-    error_backoff_base: int = 30
-    error_backoff_max: int = 600
+    TLScontact is more aggressive with anti-bot measures than VFS.
+    Minimum recommended interval is 300 seconds (5 minutes).
+    Some users report being blocked with intervals below 300s.
+    """
+
+    slot_check_interval_seconds: int = 300  # 5 minutes minimum recommended
+    session_refresh_hours: float = 4.0  # Re-login every N hours
+    error_backoff_base: int = 60  # Base seconds for exponential backoff
+    error_backoff_max: int = 1800  # Max backoff (30 minutes)
     notification_cooldown_seconds: int = 300
 
 
@@ -48,10 +60,14 @@ class CaptchaConfig(BaseModel):
 
 
 class BrowserConfig(BaseModel):
-    """Browser automation settings."""
+    """Browser automation settings.
+
+    For TLScontact, headless mode is generally fine for slot checking,
+    but discovery mode always runs with a visible browser.
+    """
 
     headless: bool = True
-    user_data_dir: str = ""
+    user_data_dir: str = ""  # Persist browser profile (cookies/session)
 
 
 class EnvConfig(BaseSettings):
@@ -59,8 +75,8 @@ class EnvConfig(BaseSettings):
 
     telegram_bot_token: str = ""
     telegram_admin_ids: str = ""
-    vfs_email: str = ""
-    vfs_password: str = ""
+    tls_email: str = ""
+    tls_password: str = ""
     captcha_api_key: str = ""
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

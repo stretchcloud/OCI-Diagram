@@ -22,7 +22,7 @@ from vfs_monitor.notifier.message_formatter import (
 from vfs_monitor.storage.database import Database
 
 if TYPE_CHECKING:
-    from vfs_monitor.auth.jwt_manager import JWTManager
+    from vfs_monitor.auth.session_manager import SessionManager
     from vfs_monitor.config import AppConfig
 
 log = structlog.get_logger()
@@ -35,11 +35,11 @@ class TelegramNotifier:
         self,
         config: AppConfig,
         db: Database,
-        jwt_manager: JWTManager | None = None,
+        session_manager: SessionManager | None = None,
     ):
         self.config = config
         self.db = db
-        self.jwt_manager = jwt_manager
+        self.session_manager = session_manager
         self.bot = Bot(token=config.env.telegram_bot_token)
         self._application = None
         self._start_time: float = 0
@@ -85,11 +85,7 @@ class TelegramNotifier:
     # --- Notification sending ---
 
     async def notify_new_slots(self, slots: list[AppointmentSlot]) -> int:
-        """
-        Send notifications for new slots to all subscribers.
-
-        Returns the number of notifications sent.
-        """
+        """Send notifications for new slots to all subscribers."""
         if not slots:
             return 0
 
@@ -120,7 +116,6 @@ class TelegramNotifier:
                         disable_web_page_preview=False,
                     )
                     sent += 1
-                    # Respect Telegram rate limits (1 msg/sec per chat)
                     await asyncio.sleep(0.05)
                 except Exception as e:
                     log.error(
@@ -129,7 +124,6 @@ class TelegramNotifier:
                         error=str(e),
                     )
 
-            # Record notifications in DB
             for slot in group_slots:
                 await self.db.record_notification(slot)
 
@@ -154,8 +148,8 @@ class TelegramNotifier:
         if not update.effective_chat:
             return
         await update.effective_chat.send_message(
-            "\U0001f44b <b>VFS Slot Monitor</b>\n\n"
-            "I monitor VFS Global for Schengen visa appointment slots "
+            "\U0001f44b <b>TLScontact Slot Monitor</b>\n\n"
+            "I monitor TLScontact for Schengen visa appointment slots "
             "and notify you instantly when slots become available.\n\n"
             "<b>Commands:</b>\n"
             "/subscribe - Get notified when slots appear\n"
@@ -180,7 +174,9 @@ class TelegramNotifier:
 
         username = update.effective_user.username
         await self.db.add_subscriber(chat_id, username)
-        centers = [c.country_name for c in self.config.enabled_centers]
+        centers = [
+            f"{c.country_name} ({c.city})" for c in self.config.enabled_centers
+        ]
         await update.effective_chat.send_message(
             "\u2705 <b>Subscribed!</b>\n\n"
             f"You'll be notified when visa slots appear for:\n"
@@ -208,11 +204,13 @@ class TelegramNotifier:
 
         import time
         stats = await self.db.get_stats(hours=24)
-        jwt_status = self.jwt_manager.status_text if self.jwt_manager else "N/A"
-        centers = [c.country_name for c in self.config.enabled_centers]
+        session_status = self.session_manager.status_text if self.session_manager else "N/A"
+        centers = [
+            f"{c.country_name} ({c.city})" for c in self.config.enabled_centers
+        ]
         uptime = time.time() - self._start_time if self._start_time else 0
 
-        message = format_status_message(stats, jwt_status, centers, uptime)
+        message = format_status_message(stats, session_status, centers, uptime)
         await update.effective_chat.send_message(message, parse_mode="HTML")
 
     async def _cmd_check(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -225,8 +223,6 @@ class TelegramNotifier:
         await update.effective_chat.send_message(
             "\U0001f50d Forcing immediate check... Results will be sent as notifications."
         )
-        # The actual check is triggered by setting a flag that app.py monitors
-        # This is a simple approach - the main loop checks this flag
         self._force_check_requested = True
 
     async def _cmd_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

@@ -6,13 +6,13 @@ from vfs_monitor.checker.slot_differ import SlotDiffer
 from vfs_monitor.models import AppointmentSlot
 
 
-def _make_slot(country: str = "fra", center: str = "London", days_ahead: int = 7) -> AppointmentSlot:
+def _make_slot(country: str = "fr", center: str = "London", days_ahead: int = 7) -> AppointmentSlot:
     return AppointmentSlot(
         country_code=country,
         country_name="France",
         center=center,
         date=datetime.date.today() + datetime.timedelta(days=days_ahead),
-        booking_url="https://example.com",
+        booking_url="https://visas-fr.tlscontact.com",
     )
 
 
@@ -61,25 +61,25 @@ def test_different_centers_tracked_separately():
     differ = SlotDiffer(cooldown_seconds=300)
 
     slot_london = _make_slot(center="London", days_ahead=7)
-    slot_manchester = _make_slot(center="Manchester", days_ahead=7)
+    slot_edinburgh = _make_slot(center="Edinburgh", days_ahead=7)
 
     new1 = differ.get_new_slots([slot_london])
     assert len(new1) == 1
 
-    new2 = differ.get_new_slots([slot_manchester])
+    new2 = differ.get_new_slots([slot_edinburgh])
     assert len(new2) == 1
 
 
 def test_summary():
     differ = SlotDiffer(cooldown_seconds=300)
     slots = [
-        _make_slot(country="fra", days_ahead=7),
-        _make_slot(country="fra", days_ahead=14),
-        _make_slot(country="nld", days_ahead=7),
+        _make_slot(country="fr", days_ahead=7),
+        _make_slot(country="fr", days_ahead=14),
+        _make_slot(country="nl", days_ahead=7),
     ]
     differ.get_new_slots(slots)
 
     summary = differ.summary()
     assert summary["total_tracked"] == 3
-    assert summary["by_country"]["fra"] == 2
-    assert summary["by_country"]["nld"] == 1
+    assert summary["by_country"]["fr"] == 2
+    assert summary["by_country"]["nl"] == 1

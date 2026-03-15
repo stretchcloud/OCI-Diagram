@@ -13,8 +13,8 @@ from vfs_monitor.utils.logging import setup_logging
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="vfs_monitor",
-        description="VFS Global visa appointment slot monitor with Telegram notifications",
+        prog="tls_monitor",
+        description="TLScontact visa appointment slot monitor with Telegram notifications",
     )
     parser.add_argument(
         "--config",
@@ -37,12 +37,12 @@ def parse_args() -> argparse.Namespace:
     mode.add_argument(
         "--login-test",
         action="store_true",
-        help="Test browser login and JWT extraction",
+        help="Test browser login to TLScontact",
     )
     mode.add_argument(
-        "--api-test",
+        "--check-test",
         action="store_true",
-        help="Run a single API check cycle",
+        help="Run a single slot check cycle",
     )
     mode.add_argument(
         "--notify-test",
@@ -52,7 +52,7 @@ def parse_args() -> argparse.Namespace:
     mode.add_argument(
         "--discover",
         metavar="COUNTRY_CODE",
-        help="Discover center codes for a country (e.g., --discover fra)",
+        help="Discover issuer IDs for a country (e.g., --discover fr)",
     )
 
     return parser.parse_args()
@@ -76,24 +76,38 @@ def main() -> None:
     if args.dry_run:
         log.info("config_valid", centers=len(config.centers), enabled=len(config.enabled_centers))
         for c in config.enabled_centers:
-            log.info("center", country=c.country_name, code=c.country_code)
+            log.info(
+                "center",
+                country=c.country_name,
+                code=c.country_code,
+                city=c.city,
+                issuer_id=c.issuer_id,
+            )
         log.info("telegram_token_set", value=bool(config.env.telegram_bot_token))
-        log.info("vfs_email_set", value=bool(config.env.vfs_email))
+        log.info("tls_email_set", value=bool(config.env.tls_email))
         sys.exit(0)
 
     # Login test mode
     if args.login_test:
-        from vfs_monitor.auth.browser_login import login_and_get_jwt
+        from vfs_monitor.auth.browser_login import login_to_tls
         from vfs_monitor.auth.captcha_solver import CaptchaSolver
 
         solver = None
         if config.captcha.enabled and config.env.captcha_api_key:
             solver = CaptchaSolver(config.env.captcha_api_key, config.captcha.provider)
 
-        country = config.enabled_centers[0].country_code if config.enabled_centers else "fra"
-        jwt = login_and_get_jwt(config, country, solver)
-        if jwt:
-            log.info("login_test_success", token_length=len(jwt), prefix=jwt[:30])
+        center = config.enabled_centers[0] if config.enabled_centers else None
+        if not center:
+            log.error("no_centers_enabled", hint="Enable at least one center in config.yaml")
+            sys.exit(1)
+
+        driver = login_to_tls(config, center, solver)
+        if driver:
+            log.info("login_test_success", url=driver.current_url)
+            try:
+                driver.quit()
+            except Exception:
+                pass
         else:
             log.error("login_test_failed")
             sys.exit(1)
@@ -101,20 +115,20 @@ def main() -> None:
 
     # Discover mode
     if args.discover:
-        from vfs_monitor.auth.browser_login import discover_center_codes
+        from vfs_monitor.auth.browser_login import discover_issuer_ids
 
-        result = discover_center_codes(config, args.discover)
-        if result and result.get("requests"):
-            log.info("discovery_complete", requests_found=len(result["requests"]))
+        result = discover_issuer_ids(config, args.discover)
+        if result and result.get("issuer_ids"):
+            log.info("discovery_complete", issuer_ids_found=len(result["issuer_ids"]))
         else:
             log.warning("discovery_no_results")
         sys.exit(0)
 
-    # API test mode
-    if args.api_test:
-        from vfs_monitor.app import VFSMonitorApp
+    # Check test mode
+    if args.check_test:
+        from vfs_monitor.app import TLSMonitorApp
 
-        app = VFSMonitorApp(config)
+        app = TLSMonitorApp(config)
         asyncio.run(app.run_single_check())
         sys.exit(0)
 
@@ -132,12 +146,12 @@ def main() -> None:
             await notifier.start(0)
 
             test_slot = AppointmentSlot(
-                country_code="nld",
-                country_name="Netherlands",
+                country_code="fr",
+                country_name="France",
                 center="London",
                 date=datetime.date.today() + datetime.timedelta(days=7),
                 slot_count=3,
-                booking_url="https://visa.vfsglobal.com/gbr/en/nld/book-an-appointment",
+                booking_url="https://visas-fr.tlscontact.com",
             )
             sent = await notifier.notify_new_slots([test_slot])
             log.info("test_notification_sent", recipients=sent)
@@ -149,9 +163,9 @@ def main() -> None:
         sys.exit(0)
 
     # Normal run mode
-    from vfs_monitor.app import VFSMonitorApp
+    from vfs_monitor.app import TLSMonitorApp
 
-    app = VFSMonitorApp(config)
+    app = TLSMonitorApp(config)
     loop = asyncio.new_event_loop()
 
     def signal_handler():

@@ -1,6 +1,6 @@
 """Slot differ: detect newly appeared appointment slots.
 
-Compares current API results against recently seen slots to identify
+Compares current check results against recently seen slots to identify
 genuinely new availability, preventing notification spam.
 """
 

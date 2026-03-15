@@ -12,11 +12,11 @@ from vfs_monitor.notifier.message_formatter import (
 
 def _make_slot(**kwargs) -> AppointmentSlot:
     defaults = {
-        "country_code": "nld",
+        "country_code": "nl",
         "country_name": "Netherlands",
         "center": "London",
         "date": datetime.date(2026, 3, 15),
-        "booking_url": "https://visa.vfsglobal.com/gbr/en/nld/book-an-appointment",
+        "booking_url": "https://visas-nl.tlscontact.com",
         "discovered_at": datetime.datetime(2026, 3, 14, 14, 32, 5),
     }
     defaults.update(kwargs)
@@ -33,6 +33,7 @@ def test_single_slot_notification():
     assert "15 March 2026" in msg
     assert "3 slot(s)" in msg
     assert "Book now" in msg
+    assert "TLScontact" in msg
     assert "14:32:05 UTC" in msg
 
 
@@ -41,6 +42,12 @@ def test_slot_with_time_slots():
     msg = format_slot_notification(slot)
     assert "09:00" in msg
     assert "10:30" in msg
+
+
+def test_prime_slot_indicated():
+    slot = _make_slot(is_prime=True)
+    msg = format_slot_notification(slot)
+    assert "Prime" in msg
 
 
 def test_multi_slot_notification():
@@ -71,11 +78,12 @@ def test_status_message():
         "avg_response_ms": 145.3,
         "last_check": "2026-03-14T14:30:00",
     }
-    msg = format_status_message(stats, "Valid (45m remaining)", ["Netherlands", "France"], 7200)
+    msg = format_status_message(stats, "Active (45m old)", ["Netherlands", "France"], 7200)
 
     assert "287 checks" in msg
     assert "98.2%" in msg
-    assert "Valid (45m remaining)" in msg
+    assert "Active (45m old)" in msg
     assert "Netherlands" in msg
     assert "France" in msg
     assert "2h 0m" in msg
+    assert "TLScontact" in msg
