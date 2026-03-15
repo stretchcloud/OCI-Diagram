@@ -371,8 +371,14 @@ def _is_logged_in(driver: uc.Chrome) -> bool:
 
 
 def _click_login_link(driver: uc.Chrome) -> bool:
-    """Find and click the login link on the TLScontact home page."""
+    """Find and click the login link on the TLScontact home page.
+
+    The new platform uses OAuth2/OIDC; clicking login redirects to
+    the identity provider (Keycloak). The legacy platform has a
+    direct login form.
+    """
     selectors = [
+        "a[href*='oauth2']",  # New platform OAuth2 login
         "a[href*='login']",
         "button[class*='login']",
         "a[class*='login']",
@@ -516,10 +522,66 @@ def _navigate_to_appointment_page(driver: uc.Chrome) -> bool:
 
 
 def _scrape_calendar_slots(driver: uc.Chrome, center: CenterConfig) -> list[dict]:
-    """Scrape the TLScontact calendar for available appointment slots."""
+    """Scrape the TLScontact calendar for available appointment slots.
+
+    TLScontact has two platform versions with different DOM structures:
+
+    Legacy (fr.tlscontact.com):
+      - Available slots use CSS class "dispo" on buttons
+      - XPath: //div[@class="inner_timeslot"][a[@class="appt-table-btn dispo"]]
+      - Date in: span[@class="appt-table-d"]
+      - Time in: link text
+
+    New (visas-fr.tlscontact.com):
+      - Available dates use CSS class "-available" on calendar cells
+      - Time slots in ".inner_timeslot" elements
+    """
     slots = []
 
-    # TLScontact marks available dates with "-available" CSS class
+    # Strategy 1: Legacy platform - look for "dispo" class (available appointment buttons)
+    try:
+        dispo_elements = driver.find_elements(
+            By.XPATH,
+            '//div[contains(@class, "inner_timeslot")]'
+            '[.//a[contains(@class, "dispo")]]',
+        )
+        if dispo_elements:
+            log.debug("found_legacy_dispo_elements", count=len(dispo_elements))
+            for el in dispo_elements:
+                try:
+                    # Extract date from the date span
+                    date_span = el.find_element(By.CSS_SELECTOR, ".appt-table-d, span.appt-table-d")
+                    date_text = date_span.text.strip() if date_span else None
+
+                    # Extract time from the link
+                    link = el.find_element(By.CSS_SELECTOR, "a.dispo, a.appt-table-btn")
+                    time_text = link.text.strip() if link else None
+
+                    # Check if prime time
+                    classes = (el.get_attribute("class") or "").lower()
+                    parent_classes = ""
+                    try:
+                        parent = el.find_element(By.XPATH, "..")
+                        parent_classes = (parent.get_attribute("class") or "").lower()
+                    except Exception:
+                        pass
+                    is_prime = "prime" in classes or "prime" in parent_classes
+
+                    slots.append({
+                        "date": _parse_legacy_date(date_text),
+                        "time": time_text,
+                        "is_prime": is_prime,
+                    })
+                except Exception:
+                    continue
+
+            if slots:
+                log.debug("legacy_slots_found", count=len(slots))
+                return _deduplicate_slots(slots)
+    except Exception:
+        pass
+
+    # Strategy 2: New platform - look for "-available" CSS class on calendar
     available_selectors = [
         ".-available",
         ".day.-available",
@@ -545,45 +607,100 @@ def _scrape_calendar_slots(driver: uc.Chrome, center: CenterConfig) -> list[dict
         except Exception:
             continue
 
-    # Also check for time slot elements directly
-    time_selectors = [
-        ".inner_timeslot",
-        ".timeslot",
-        ".time-slot",
-        "[class*='timeslot']",
-    ]
+    # Strategy 3: Check for time slot elements directly
+    if not slots:
+        time_selectors = [
+            ".inner_timeslot",
+            ".timeslot",
+            ".time-slot",
+            "[class*='timeslot']",
+        ]
 
-    for selector in time_selectors:
-        try:
-            time_elements = driver.find_elements(By.CSS_SELECTOR, selector)
-            if time_elements:
-                for el in time_elements:
-                    if el.is_displayed():
-                        text = el.text.strip()
-                        if text:
-                            # Check if this is associated with an available day
-                            is_prime = "prime" in (
-                                el.get_attribute("class") or ""
-                            ).lower()
-                            slots.append({
-                                "date": None,
-                                "time": text,
-                                "is_prime": is_prime,
-                            })
-                break
-        except Exception:
-            continue
+        for selector in time_selectors:
+            try:
+                time_elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                if time_elements:
+                    for el in time_elements:
+                        if el.is_displayed():
+                            text = el.text.strip()
+                            if text:
+                                is_prime = "prime" in (
+                                    el.get_attribute("class") or ""
+                                ).lower()
+                                slots.append({
+                                    "date": None,
+                                    "time": text,
+                                    "is_prime": is_prime,
+                                })
+                    break
+            except Exception:
+                continue
 
-    # Deduplicate and clean up
-    seen_dates = set()
-    unique_slots = []
+    return _deduplicate_slots(slots)
+
+
+def _deduplicate_slots(slots: list[dict]) -> list[dict]:
+    """Remove duplicate slot entries."""
+    seen = set()
+    unique = []
     for slot in slots:
         key = f"{slot.get('date')}:{slot.get('time', '')}"
-        if key not in seen_dates:
-            seen_dates.add(key)
-            unique_slots.append(slot)
+        if key not in seen:
+            seen.add(key)
+            unique.append(slot)
+    return unique
 
-    return unique_slots
+
+def _parse_legacy_date(text: str | None) -> str | None:
+    """Parse a date string from the legacy TLScontact format.
+
+    Legacy format examples: "March 15", "15 March", "Mar 15 2026"
+    """
+    if not text:
+        return None
+
+    import datetime
+
+    months = {
+        "january": 1, "february": 2, "march": 3, "april": 4,
+        "may": 5, "june": 6, "july": 7, "august": 8,
+        "september": 9, "october": 10, "november": 11, "december": 12,
+        "jan": 1, "feb": 2, "mar": 3, "apr": 4,
+        "jun": 6, "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
+    }
+
+    text_lower = text.lower().strip()
+
+    # Try ISO format first
+    if re.match(r"\d{4}-\d{2}-\d{2}", text_lower):
+        return text_lower[:10]
+
+    # Extract month and day
+    month = None
+    day = None
+    year = datetime.datetime.now().year
+
+    for name, num in months.items():
+        if name in text_lower:
+            month = num
+            break
+
+    day_match = re.search(r"\b(\d{1,2})\b", text_lower)
+    if day_match:
+        day = int(day_match.group(1))
+
+    year_match = re.search(r"\b(20\d{2})\b", text_lower)
+    if year_match:
+        year = int(year_match.group())
+
+    if month and day:
+        try:
+            d = datetime.date(year, month, day)
+            return d.isoformat()
+        except ValueError:
+            pass
+
+    return None
 
 
 def _parse_calendar_element(element, center: CenterConfig) -> dict | None:

@@ -141,8 +141,11 @@ TLS_PASSWORD=your_tlscontact_password
 CAPTCHA_API_KEY=
 ```
 
-> **Note**: Use the same email/password you use to log in at
-> `visas-fr.tlscontact.com` (or whichever country's TLS portal).
+> **Important**: TLScontact accounts are **portal-specific**. Your account
+> on `visas-fr.tlscontact.com` (France) will NOT work on
+> `visas-de.tlscontact.com` (Germany). You need separate accounts
+> for each country. Use the credentials for the specific country
+> you want to monitor.
 
 ### 4c. Create your config.yaml
 
@@ -405,6 +408,21 @@ check interval is safe, but if you get blocked:
      enabled: true
      urls:
        - "http://user:pass@residential-proxy:8080"
+   ```
+
+### Cloudflare blocking you
+
+TLScontact uses aggressive Cloudflare protection. If you see
+"blocked by Cloudflare firewall":
+
+1. **Wait** - blocks can last minutes to days
+2. **Switch IP** - try mobile data (4G/5G) for a different IP
+3. **Avoid VPNs** - shared/VPN IPs are frequently pre-blocked
+4. **Increase interval** - use 600s+ between checks
+5. **Use `user_data_dir`** to persist browser profile:
+   ```yaml
+   browser:
+     user_data_dir: "/app/data/chrome-profile"
    ```
 
 ### CAPTCHA keeps blocking login
