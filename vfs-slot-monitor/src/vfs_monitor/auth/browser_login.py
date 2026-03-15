@@ -479,46 +479,79 @@ def check_slots_browser(
 
 
 def _navigate_to_appointment_page(driver: uc.Chrome) -> bool:
-    """Navigate from the TLS home/dashboard to the appointment booking page."""
-    # Try clicking appointment-related buttons
-    nav_selectors = [
-        "a[href*='appointment']",
-        "a[href*='booking']",
-        "button.tls-button-primary",
-        ".button-neo-inside.-primary",
-        "a.tls-button-primary",
-        "a[href*='workflow']",
+    """Navigate from the TLS home/dashboard to the appointment booking page.
+
+    The new platform requires clicking through multiple buttons:
+    1. "tls-button-primary button-neo-inside" (enter/continue button)
+    2. "button-neo-inside -primary" (book appointment button)
+
+    These exact class names come from the tls_contact_visaBot project
+    which was tested against the live new TLScontact platform.
+    """
+    # Step 1: Click the primary enter/continue button (new platform)
+    # Exact XPath from working bot: //button[@class="tls-button-primary button-neo-inside"]
+    step1_selectors = [
+        (By.XPATH, '//button[@class="tls-button-primary button-neo-inside"]'),
+        (By.CSS_SELECTOR, "button.tls-button-primary.button-neo-inside"),
+        (By.CSS_SELECTOR, "a[href*='appointment']"),
+        (By.CSS_SELECTOR, "a[href*='booking']"),
+        (By.CSS_SELECTOR, "a[href*='workflow']"),
     ]
 
-    for selector in nav_selectors:
+    clicked = False
+    for by, selector in step1_selectors:
         try:
-            elements = driver.find_elements(By.CSS_SELECTOR, selector)
+            elements = driver.find_elements(by, selector)
             for el in elements:
+                if el.is_displayed():
+                    el.click()
+                    _human_delay(1500, 3000)
+                    clicked = True
+                    break
+            if clicked:
+                break
+        except Exception:
+            continue
+
+    if not clicked:
+        # Fallback: try any primary button with relevant text
+        try:
+            for el in driver.find_elements(By.CSS_SELECTOR, "button, a.tls-button-primary"):
                 text = (el.text or "").lower()
                 if el.is_displayed() and any(
                     kw in text
-                    for kw in ["appointment", "book", "continue", "next", "proceed"]
+                    for kw in ["appointment", "book", "continue", "next", "proceed", "enter"]
                 ):
                     el.click()
-                    _human_delay(1000, 2000)
+                    _human_delay(1500, 3000)
+                    clicked = True
+                    break
+        except Exception:
+            pass
+
+    if not clicked:
+        return False
+
+    # Step 2: Click the "book appointment" button (new platform)
+    # Exact XPath from working bot: //button[@class="button-neo-inside -primary"]
+    step2_selectors = [
+        (By.XPATH, '//button[@class="button-neo-inside -primary"]'),
+        (By.CSS_SELECTOR, "button.button-neo-inside.-primary"),
+    ]
+
+    for by, selector in step2_selectors:
+        try:
+            elements = driver.find_elements(by, selector)
+            for el in elements:
+                if el.is_displayed():
+                    el.click()
+                    _human_delay(1500, 3000)
                     return True
         except Exception:
             continue
 
-    # If specific text buttons not found, try the primary action button
-    try:
-        primary_btns = driver.find_elements(
-            By.CSS_SELECTOR, ".tls-button-primary, .button-neo-inside.-primary"
-        )
-        for btn in primary_btns:
-            if btn.is_displayed():
-                btn.click()
-                _human_delay(1000, 2000)
-                return True
-    except Exception:
-        pass
-
-    return False
+    # If step 2 button not found, we may already be on the right page
+    return True
 
 
 def _scrape_calendar_slots(driver: uc.Chrome, center: CenterConfig) -> list[dict]:
@@ -581,18 +614,20 @@ def _scrape_calendar_slots(driver: uc.Chrome, center: CenterConfig) -> list[dict
     except Exception:
         pass
 
-    # Strategy 2: New platform - look for "-available" CSS class on calendar
-    available_selectors = [
-        ".-available",
-        ".day.-available",
-        "td.-available",
-        "[class*='available']:not([class*='unavailable'])",
-        ".appt-table-container .-available",
+    # Strategy 2: New platform - look for "-available" buttons/elements
+    # Exact XPath from working bot: //button[contains(@class, '-available')]
+    available_finders = [
+        (By.XPATH, "//button[contains(@class, '-available')]"),
+        (By.CSS_SELECTOR, ".-available"),
+        (By.CSS_SELECTOR, ".day.-available"),
+        (By.CSS_SELECTOR, "td.-available"),
+        (By.CSS_SELECTOR, "[class*='available']:not([class*='unavailable'])"),
+        (By.CSS_SELECTOR, ".appt-table-container .-available"),
     ]
 
-    for selector in available_selectors:
+    for by, selector in available_finders:
         try:
-            available_elements = driver.find_elements(By.CSS_SELECTOR, selector)
+            available_elements = driver.find_elements(by, selector)
             if available_elements:
                 log.debug(
                     "found_available_elements",
@@ -606,6 +641,22 @@ def _scrape_calendar_slots(driver: uc.Chrome, center: CenterConfig) -> list[dict
                 break
         except Exception:
             continue
+
+    # Check for "no slots" popup and dismiss it (new platform)
+    # XPath from working bot: //button[@class='tls-button-primary -uppercase']
+    if not slots:
+        try:
+            no_slots_btn = driver.find_elements(
+                By.XPATH, "//button[@class='tls-button-primary -uppercase']"
+            )
+            if no_slots_btn:
+                for btn in no_slots_btn:
+                    if btn.is_displayed():
+                        btn.click()
+                        log.debug("dismissed_no_slots_popup")
+                        break
+        except Exception:
+            pass
 
     # Strategy 3: Check for time slot elements directly
     if not slots:
