@@ -176,15 +176,24 @@ access into two tiers:
 
 **Do not start from a blank file.** Rank of projects relevant to a 5.0, best first:
 
-| Project | Lang / platform | Models | What you get | Notes |
-|---|---|---|---|---|
-| [`Sophonbot0/whoop-vault`](https://github.com/Sophonbot0/whoop-vault) | Python + BlueZ (Linux) | **5.0** | Live HR/temp/motion/battery + **full historical drain** → SQLite + local web dashboard | **Best 5.0 starting point.** Built by decompiling the Android app with `jadx`. |
-| [`ryanbr/noop`](https://github.com/ryanbr/noop) | Swift (macOS/iOS) + Kotlin (Android) | 4.0 full, **5.0 live HR** | On-device metrics, local SQLite, offline | Large community; deeper 5.0 metrics still experimental |
-| [`OpenStrap/edge`](https://github.com/OpenStrap/edge) | Flutter/Dart (iOS/Android) | 4.0 full, **5.0 experimental** | Full consumer app, on-device scoring, no cloud/account | Flagship 4.0 app; 5.0 "detected but not validated" |
-| [`OpenStrap/protocol`](https://github.com/OpenStrap/protocol) | Pure Dart | 4.0 (authoritative) | Reusable decoder — the **best protocol reference** | Source of most of [§7](#7-the-whoop-ble-protocol-reference) |
-| [`Sivasai2207/WHOOP-Reverse-Engineering-5.0`](https://github.com/Sivasai2207/WHOOP-Reverse-Engineering-5.0) | Kotlin | 5.0 | Minimal 5.0 RE notes | Early stage |
-| [`christianmeurer/whoop-reader`](https://github.com/christianmeurer/whoop-reader) | Python (`bleak`) | 4.0 | HR/RR/SpO₂/temp/accel/battery reader | Good, simple `bleak` reference to learn from |
-| [`grivera82/whoop-live`](https://github.com/grivera82/whoop-live) | Python | 4.0 (works on 5.0 HR) | Live HR via **standard** HR broadcast | Smallest possible starting point |
+| Project | Lang / platform | Models | **License** | What you get | Notes |
+|---|---|---|---|---|---|
+| [`Sophonbot0/whoop-vault`](https://github.com/Sophonbot0/whoop-vault) | Python + BlueZ (Linux) | **5.0** | **MIT** ✅ | Live HR/temp/motion/battery + **full historical drain** → SQLite + local web dashboard | **Best 5.0 starting point.** Built by decompiling the Android app with `jadx`. |
+| [`ryanbr/noop`](https://github.com/ryanbr/noop) | Swift (macOS/iOS) + Kotlin (Android) | 4.0 full, **5.0 live HR** | **PolyForm Noncommercial** ⚠️ | On-device metrics, local SQLite, offline | Large community; deeper 5.0 metrics still experimental. **Personal use only — see warning below** |
+| [`OpenStrap/edge`](https://github.com/OpenStrap/edge) | Flutter/Dart (iOS/Android) | 4.0 full, **5.0 experimental** | **MIT** ✅ | Full consumer app, on-device scoring, no cloud/account | Flagship 4.0 app; 5.0 "detected but not validated" |
+| [`OpenStrap/protocol`](https://github.com/OpenStrap/protocol) | Pure Dart | 4.0 (authoritative) | **MIT** ✅ | Reusable decoder — the **best protocol reference** | Source of most of [§7](#7-the-whoop-ble-protocol-reference) |
+| [`Sivasai2207/WHOOP-Reverse-Engineering-5.0`](https://github.com/Sivasai2207/WHOOP-Reverse-Engineering-5.0) | Kotlin | 5.0 | check repo | Minimal 5.0 RE notes | Early stage |
+| [`christianmeurer/whoop-reader`](https://github.com/christianmeurer/whoop-reader) | Python (`bleak`) | 4.0 | check repo | HR/RR/SpO₂/temp/accel/battery reader | Good, simple `bleak` reference to learn from |
+| [`grivera82/whoop-live`](https://github.com/grivera82/whoop-live) | Python | 4.0 (works on 5.0 HR) | check repo | Live HR via **standard** HR broadcast | Smallest possible starting point |
+| [`bWanShiTong/reverse-engineering-whoop-post`](https://github.com/bWanShiTong/reverse-engineering-whoop-post) | Docs | 4.0 | **none declared** ⚠️ | Canonical protocol write-up | Protocol *facts* aren't copyrightable, but the code samples are all-rights-reserved — read it, then write your own |
+
+> ⚠️ **Licenses matter if you ever go beyond personal use.** `ryanbr/noop` is **PolyForm
+> Noncommercial 1.0.0**, which permits personal use but **prohibits commercial use** — including a
+> free app monetized by ads or a paid tier. If you are building anything commercial, start from the
+> **MIT-licensed** projects (`OpenStrap/edge`, `OpenStrap/protocol`, `whoop-vault`) and treat
+> unlicensed repos as read-only references for a clean-room reimplementation. Note also that
+> `hrv-analysis` (in [`analytics-stack.md`](./analytics-stack.md)) is **GPL**, which carries
+> App Store friction — prefer NeuroKit2 (MIT) if you plan to ship.
 
 **Recommended decision tree:**
 
