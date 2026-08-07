@@ -515,9 +515,36 @@ processed summaries only) · in-app data export · `privacy.whoop.com` (GDPR/CCP
 
 ---
 
+---
+
+## 13. Unlocking the paid-tier features (Peak / Life)
+
+WHOOP gates extra metrics behind pricier tiers — Healthspan/WHOOP Age, Health Monitor,
+Real-time Stress Monitor (Peak), and ECG, AFib notifications, Blood Pressure Insights (Life,
+which ships the **MG** hardware).
+
+**Of those six, exactly one is genuinely impossible on a WHOOP 5.0.** The headline findings:
+
+- **The Peak-tier features are provably software-only** — WHOOP shipped Healthspan to the
+  **4.0** via an app update. Nothing about your hardware is the limitation.
+- **WHOOP's own AFib detection is PPG-based, not ECG-based** (their trial registration: PPG +
+  XGBoost over beat-to-beat intervals). Your 5.0 has every sensor it needs.
+- **Only ECG is a real hardware wall** — the MG adds conductive electrodes in the *band*.
+  A ~$79 KardiaMobile gives you more, once.
+- **Don't try to output blood pressure in mmHg** — single-site wrist PPG structurally can't do it,
+  and the 2025 AHA/ACC guideline recommends against cuffless BP entirely.
+
+See **[`premium-metrics.md`](./premium-metrics.md)** for the full analysis, the verified
+hardware/software gating table, and how to compute each metric yourself.
+
+---
+
 *See [`starter/whoop_live_hr.py`](./starter/whoop_live_hr.py) for a minimal, dependency-light
-live-heart-rate script to confirm your setup, and [`analytics-stack.md`](./analytics-stack.md)
-for the metric-by-metric library reference.*
+live-heart-rate script to confirm your setup, [`analytics-stack.md`](./analytics-stack.md)
+for the metric-by-metric library reference, [`premium-metrics.md`](./premium-metrics.md) for
+rebuilding the paid-tier features, and [`starter/premium_metrics.py`](./starter/premium_metrics.py)
+for working implementations of Baevsky's Stress Index, NightSignal illness detection, the
+WHOOP-Age hazard-ratio conversion, VO₂max and the Sleep Regularity Index.*
 
 *Compiled from source-verified reverse-engineering work by the open-source community. Not
 affiliated with or endorsed by WHOOP. Not a medical device. For use with hardware you own.*
