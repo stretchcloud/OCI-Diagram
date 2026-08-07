@@ -548,6 +548,22 @@ hardware/software gating table, and how to compute each metric yourself.
 
 ---
 
+## 14. Building a product on this
+
+If you're considering turning this into an app rather than a personal setup, two documents cover it:
+
+- **[`product-strategy.md`](./product-strategy.md)** — market research, user pain points, competitive
+  landscape, monetization economics, and the legal/platform risks. Read this **first**: it documents
+  several findings that kill common plans outright (patents, trademark, app-store policy, ads).
+- **[`PRD.md`](./PRD.md)** — a full product requirements document: features, user stories, iOS (TCA)
+  and Android (MVI) architecture, data model, monetization, compliance requirements, and roadmap.
+
+The short version: reading your own band is legitimate interoperability, but **selling** a client is
+a materially different risk posture — WHOOP is currently asserting four patents against a competitor
+over exactly this feature set, and patents have no reverse-engineering defence.
+
+---
+
 *See [`starter/whoop_live_hr.py`](./starter/whoop_live_hr.py) for a minimal, dependency-light
 live-heart-rate script to confirm your setup, [`analytics-stack.md`](./analytics-stack.md)
 for the metric-by-metric library reference, [`premium-metrics.md`](./premium-metrics.md) for
