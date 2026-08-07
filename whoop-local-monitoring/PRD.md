@@ -73,7 +73,7 @@ features that convert a wellness app into a regulated medical device. See [§5.4
 
 ### 1.5 Business model
 
-Free core with **nothing essential withheld**. Optional supporter tier at **$4.99/mo or $39.99/yr**.
+Free core with **nothing essential withheld**. Optional supporter tier at **$29/year**.
 **No advertising, ever** — it is prohibited by Apple, unusable under GDPR, earns ~10× less than
 subscription in this category, and destroys the privacy positioning that is the entire product.
 
@@ -1018,24 +1018,36 @@ CREATE TABLE experiment (
 | Tier | Price | Contents |
 |---|---|---|
 | **Free** | $0 | BLE capture, history drain, all core scores, "why this number", robust baselines, full local history, complete export, health-platform sync. **No ads. No SDKs. No account.** |
-| **Supporter** | **$4.99/mo** or **$39.99/yr** | Multi-device sync, encrypted backup, rigorous n-of-1 experiments, web deep-dive, cross-vendor import, custom score weights, priority device support. |
+| **Supporter** | **$29/year** | Multi-device sync, encrypted backup, rigorous n-of-1 experiments, web deep-dive, cross-vendor import, custom score weights, priority device support. |
 | **Donations** | — | Liberapay / GitHub Sponsors. A floor, not a plan. |
 
-### 15.2 Pricing rationale, and a flagged concern
+### 15.2 Pricing rationale
 
-You proposed **$5/month**. I've specced it, with a recommendation attached.
+**$29/year, annual only.** This sits precisely on the market anchor and is deliberate on three counts:
 
-**The concern:** users will not price you against WHOOP's $30/mo — they'll price you against
-**Athlytic at $29.99/yr**, the direct "turn hardware you own into WHOOP-style scores" comparable.
-At $60/yr you are **2× the nearest competitor**.
+1. **It matches the direct comparable.** Users will not price this against WHOOP's ~$30/month —
+   they will price it against **Athlytic at $29.99/yr**, the closest "turn hardware you already own
+   into WHOOP-style scores" product. Matching that anchor removes price from the decision and puts
+   the comparison where we win: local-first, explainable, and permanent history.
+2. **Annual-only is the stronger structure, not a compromise.** Annual plans take **60.6%** of Health
+   & Fitness subscriptions, and annual subscribers churn **48% after year one versus 79% for
+   monthly** — roughly 3× more valuable over 24 months. Offering monthly would mostly cannibalise
+   annual with a worse-retaining subscriber.
+3. **It reinforces the positioning.** A single low annual price is legible and unaggressive. The
+   product's pitch is that you shouldn't pay rent on hardware you own; a monthly meter works against
+   that message.
 
-**The recommendation:** keep $4.99/mo for flexibility but make **$39.99/yr** the promoted default
-(a 33% discount). Category data supports this strongly — annual plans take **60.6%** of Health &
-Fitness subscriptions, and annual subscribers churn **48% after year one versus 79% for monthly**,
-making them roughly 3× more valuable over 24 months.
+**Framing for marketing:** *"About the cost of one month of the thing you're replacing — once a
+year."* Note this frames the **price**, not an instruction to cancel anything — see
+[§3.2 N5](#32-non-goals) on tortious interference.
 
-**Anchors:** HRV4Training $9.99 once · Athlytic $29.99/yr · Kygo $39.99/yr · Vora Pro $89.99/yr ·
+**Anchors:** HRV4Training $9.99 once · **Athlytic $29.99/yr** · Kygo $39.99/yr · Vora Pro $89.99/yr ·
 Bevel Pro $99.99/yr · Stryd $129/yr · TrainingPeaks $134.99/yr · WHOOP $199–359/yr.
+
+**Revisit criteria.** Add a monthly tier only if post-launch data shows meaningful demand for trial
+flexibility that the free tier does not already satisfy. Since the free tier is genuinely complete,
+a monthly plan has little job to do here. Price increases, if ever, apply to new subscribers only —
+existing supporters keep their rate.
 
 ### 15.3 Why not ads — settled
 
@@ -1052,9 +1064,18 @@ free tier.
 
 ### 15.4 Store economics
 
-15% under Apple's Small Business Program and Google Play's equivalent (both apply below $1M/yr).
-Modeled: 5,000 engaged users × 10% conversion × $39.99 ≈ **$20,000 gross / ~$17,000 net**.
-Comparable to the *optimistic* ad case at the same scale, with none of the legal exposure.
+15% under Apple's Small Business Program and Google Play's equivalent (both apply below $1M/yr), so
+**net ≈ $24.65 per supporter per year**.
+
+| Engaged MAU | 5% conversion | 10% conversion |
+|---|---|---|
+| 5,000 | $6,200 net | $12,300 net |
+| 20,000 | $24,700 net | $49,300 net |
+| 50,000 | $61,600 net | $123,300 net |
+
+At 5,000 engaged users and 10% conversion this is comparable to the *optimistic* advertising case at
+the same scale — with none of the legal exposure, no ad SDK, and no contradiction of the privacy
+positioning.
 
 ---
 
@@ -1145,8 +1166,11 @@ n-of-1 engine, sync, encrypted backup, web dashboard, cross-vendor import.
 
 ### 18.4 Business
 
-Break-even ≈ **1,000 annual supporters** (~$40k gross, ~$34k net). Reference point: Intervals.icu
-supports a full-time developer at 160,000 users on a $4/mo optional tier.
+Break-even ≈ **1,400 annual supporters** ($40,600 gross, ~$34,500 net at $29/yr less the 15% store
+cut). At a 10% conversion rate that implies **~14,000 engaged monthly actives**.
+
+Reference point: Intervals.icu supports a full-time developer at 160,000 users on a $4/mo optional
+tier — so the bar is reachable, but it is a multi-year build, not a launch outcome.
 
 ---
 
@@ -1187,7 +1211,7 @@ supports a full-time developer at 160,000 users on a $4/mo optional tier.
 7. Will Apple accept a BLE-only client under 5.2.1 with WHOOP absent from all metadata?
 
 **Product decisions:**
-8. Final pricing — $4.99/mo + $39.99/yr (recommended) or $5/mo flat?
+8. ~~Final pricing.~~ **Decided: $29/year, annual only.** See [§15.2](#152-pricing-rationale).
 9. Do we pursue a **commercial dual-license** from the NOOP copyright holder, which would retire a
    critical risk and unlock a substantially more mature codebase?
 10. Do we target a clinically-adjacent niche later (the Visible/ME-CFS model shows far higher
