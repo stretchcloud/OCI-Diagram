@@ -4,6 +4,13 @@
 **Working codename:** `STRAND` *(placeholder — see [§5.3](#53-naming-requirements); do not ship a name containing "whoop")*
 **Status:** Draft for review · **Owner:** TBD · **Last updated:** 2026-08-07
 
+> ⚖️ **There are two PRDs. This is the WHOOP-only framing.**
+> [`PRD-multi-device.md`](./PRD-multi-device.md) specifies the same engine supporting **many device
+> types, one device per user** (Apple Watch, Polar, WHOOP, Fitbit, Oura, Samsung). Both are live
+> options. The multi-device version has a materially better risk profile — it launches on sanctioned
+> APIs, so App Store Guideline 5.2.1 rejection and inadequate WHOOP 5.0 protocol coverage both drop
+> from fatal to survivable. This version has the tighter story and the deeper raw-data moat.
+>
 > **Companion documents.** This PRD is the decision document. Implementation detail lives in:
 > - [`README.md`](./README.md) — BLE protocol reference (GATT UUIDs, framing, opcodes, R24 record map, sync handshake)
 > - [`analytics-stack.md`](./analytics-stack.md) — metric-by-metric open-source library reference

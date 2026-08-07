@@ -555,8 +555,12 @@ If you're considering turning this into an app rather than a personal setup, two
 - **[`product-strategy.md`](./product-strategy.md)** — market research, user pain points, competitive
   landscape, monetization economics, and the legal/platform risks. Read this **first**: it documents
   several findings that kill common plans outright (patents, trademark, app-store policy, ads).
-- **[`PRD.md`](./PRD.md)** — a full product requirements document: features, user stories, iOS (TCA)
-  and Android (MVI) architecture, data model, monetization, compliance requirements, and roadmap.
+- **[`PRD.md`](./PRD.md)** — full product requirements for a **WHOOP-only** client: features, user
+  stories, iOS (TCA) and Android (MVI) architecture, data model, monetization, compliance, roadmap.
+- **[`PRD-multi-device.md`](./PRD-multi-device.md)** — the same engine supporting **many devices, one
+  per user** (Apple Watch, Polar, WHOOP, Fitbit, Oura, Samsung). Adds a fidelity-tier model and a
+  source-adapter architecture; launches on sanctioned APIs, which materially lowers the legal and
+  App Store risk. Both PRDs are live options — read them side by side.
 
 The short version: reading your own band is legitimate interoperability, but **selling** a client is
 a materially different risk posture — WHOOP is currently asserting four patents against a competitor
